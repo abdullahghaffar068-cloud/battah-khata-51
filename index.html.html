@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>بھٹہ کھاتہ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&family=Noto+Sans+Arabic:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --clay: #A6472A;
+    --clay-dark: #7E361F;
+    --ember: #C9622B;
+    --sand: #F3E9D8;
+    --sand-deep: #EADFC8;
+    --card: #FFFDF9;
+    --ink: #2B241C;
+    --ink-soft: #7A6A5C;
+    --good: #4B7B4E;
+    --good-bg: #E7F0E4;
+    --bad: #A6342A;
+    --bad-bg: #F6E4E0;
+    --line: #E3D5BE;
+    --radius: 16px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--sand);
+    font-family: 'Noto Sans Arabic', sans-serif;
+    color: var(--ink);
+    min-height: 100vh;
+    display:flex;
+    justify-content:center;
+  }
+  #app{
+    width:100%;
+    max-width:480px;
+    min-height:100vh;
+    background: var(--sand);
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    padding-bottom: 84px;
+  }
+  .brickrow{
+    height:10px;
+    background-image: repeating-linear-gradient(90deg, var(--ember) 0 38px, var(--clay-dark) 38px 40px);
+    background-size: 40px 10px;
+    opacity:0.9;
+  }
+  .brickrow.alt{
+    background-position: 20px 0;
+    opacity:0.55;
+  }
+  header.topbar{
+    background: linear-gradient(180deg, var(--clay) 0%, var(--clay-dark) 100%);
+    color:#fff;
+    padding: 18px 18px 22px;
+    position: sticky;
+    top:0;
+    z-index: 20;
+  }
+  header.topbar .row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  header.topbar h1{
+    font-family:'Noto Nastaliq Urdu', serif;
+    font-size: 26px;
+    margin:0;
+    font-weight:700;
+  }
+  header.topbar .sub{
+    font-size:13px;
+    opacity:0.85;
+    margin-top:2px;
+  }
+  .gear{
+    width:40px;height:40px;border-radius:50%;
+    background:rgba(255,255,255,0.15);
+    display:flex;align-items:center;justify-content:center;
+    font-size:20px; border:none; color:#fff; cursor:pointer;
+  }
+  main{
+    flex:1;
+    padding: 16px;
+  }
+  .card{
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(43,36,28,0.08);
+    border: 1px solid var(--line);
+    margin-bottom: 14px;
+  }
+  .dash-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .stat{
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 14px;
+    border: 1px solid var(--line);
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+  }
+  .stat .num{
+    font-size: 26px;
+    font-weight:800;
+    color: var(--clay-dark);
+    display:block;
+  }
+  .stat .lbl{
+    font-size:13px;
+    color: var(--ink-soft);
+    margin-top:2px;
+    display:block;
+  }
+  .section-title{
+    font-family:'Noto Nastaliq Urdu', serif;
+    font-size: 20px;
+    font-weight:700;
+    margin: 6px 2px 12px;
+    color: var(--clay-dark);
+  }
+  .big-btn{
+    width:100%;
+    padding: 16px;
+    border-radius: 14px;
+    border:none;
+    background: var(--clay);
+    color:#fff;
+    font-size:17px;
+    font-weight:700;
+    font-family:'Noto Sans Arabic', sans-serif;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+  }
+  .big-btn:active{ background: var(--clay-dark); }
+  .big-btn.secondary{
+    background: var(--card);
+    color: var(--clay-dark);
+    border: 2px solid var(--clay);
+  }
+  label.field-label{
+    display:block;
+    font-size:15px;
+    font-weight:600;
+    margin: 12px 0 6px;
+    color: var(--ink);
+  }
+  input[type=number], input[type=text], input[type=date], select{
+    width:100%;
+    padding: 14px;
+    font-size: 18px;
+    border-radius: 12px;
+    border: 2px solid var(--line);
+    background: #fff;
+    color: var(--ink);
+    font-family:'Noto Sans Arabic', sans-serif;
+  }
+  input:focus, select:focus{ outline:none; border-color: var(--clay); }
+  .row-flex{ display:flex; gap:10px; }
+  .row-flex > *{ flex:1; }
+  .list-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding: 12px 4px;
+    border-bottom: 1px solid var(--line);
+  }
+  .list-item:last-child{ border-bottom:none; }
+  .list-item .li-main{ font-weight:700; font-size:15px; }
+  .list-item .li-sub{ font-size:13px; color: var(--ink-soft); margin-top:2px;}
+  .li-amt{ font-weight:800; font-size:16px; }
+  .li-amt.good{ color: var(--good); }
+  .li-amt.bad{ color: var(--bad); }
+  .badge{
+    display:inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size:12px;
+    font-weight:700;
+  }
+  .badge.good{ background: var(--good-bg); color: var(--good); }
+  .badge.bad{ background: var(--bad-bg); color: var(--bad); }
+  nav.bottomnav{
+    position: fixed;
+    bottom:0;
+    left:50%;
+    transform: translateX(-50%);
+    width:100%;
+    max-width:480px;
+    background: #fff;
+    border-top: 1px solid var(--line);
+    display:flex;
+    justify-content:space-around;
+    padding: 6px 2px calc(6px + env(safe-area-inset-bottom));
+    z-index: 30;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
+  }
+  nav.bottomnav button{
+    background:none;
+    border:none;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:2px;
+    color: var(--ink-soft);
+    font-family:'Noto Sans Arabic', sans-serif;
+    font-size:11px;
+    padding:6px 4px;
+    flex:1;
+    cursor:pointer;
+    border-radius: 10px;
+  }
+  nav.bottomnav button .ic{ font-size:20px; }
+  nav.bottomnav button.active{ color: var(--clay); background: var(--sand-deep); }
+  .empty{
+    text-align:center;
+    padding: 30px 10px;
+    color: var(--ink-soft);
+    font-size:14px;
+  }
+  .empty .ic{ font-size:40px; display:block; margin-bottom:8px; }
+  .fab-space{ height:6px; }
+  .toast{
+    position: fixed;
+    bottom: 96px;
+    left:50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color:#fff;
+    padding: 12px 22px;
+    border-radius: 30px;
+    font-size:14px;
+    z-index: 100;
+    opacity:0;
+    transition: opacity .25s, transform .25s;
+    pointer-events:none;
+    max-width: 90%;
+    text-align:center;
+  }
+  .toast.show{ opacity:1; }
+  .modal-overlay{
+    position:fixed; inset:0; background: rgba(43,36,28,0.5);
+    display:flex; align-items:flex-end; justify-content:center;
+    z-index: 200;
+  }
+  .modal-sheet{
+    background: var(--sand);
+    width:100%; max-width:480px;
+    border-radius: 20px 20px 0 0;
+    padding: 18px;
+    max-height: 88vh;
+    overflow-y:auto;
+  }
+  .modal-sheet h3{
+    font-family:'Noto Nastaliq Urdu', serif;
+    margin:0 0 12px;
+    font-size:20px;
+    color: var(--clay-dark);
+  }
+  .close-x{
+    position:absolute; left:14px; top:14px;
+    background:rgba(0,0,0,0.15); color:#fff; border:none;
+    width:32px;height:32px;border-radius:50%; font-size:16px; cursor:pointer;
+  }
+  .worker-chip{
+    display:inline-flex; align-items:center; gap:6px;
+    background: var(--sand-deep); border:2px solid transparent;
+    border-radius:12px; padding:10px 12px; margin:4px; cursor:pointer;
+    font-weight:600; font-size:14px;
+  }
+  .worker-chip.selected{ border-color: var(--clay); background:#fff; color:var(--clay-dark); }
+  .tabbar{
+    display:flex; gap:6px; margin-bottom:14px; overflow-x:auto; padding-bottom:2px;
+  }
+  .tabbar button{
+    white-space:nowrap;
+    padding:9px 16px; border-radius:20px; border:2px solid var(--line);
+    background:#fff; font-family:'Noto Sans Arabic',sans-serif; font-weight:600; font-size:13px;
+    color: var(--ink-soft); cursor:pointer;
+  }
+  .tabbar button.active{ background: var(--clay); border-color:var(--clay); color:#fff; }
+  .loading{ text-align:center; padding:60px 10px; color:var(--ink-soft); }
+  .icon-circle{
+    width:44px;height:44px;border-radius:50%;
+    background: var(--sand-deep);
+    display:flex;align-items:center;justify-content:center;
+    font-size:20px; flex-shrink:0;
+  }
+  .flex-mid{ display:flex; gap:12px; align-items:center; }
+  .del-btn{
+    background:none;border:none;color:var(--bad);font-size:18px;cursor:pointer;padding:6px;
+  }
+  .divider{ height:1px; background:var(--line); margin:14px 0; }
+  .note-box{
+    background: var(--sand-deep); border-radius:10px; padding:10px 12px; font-size:13px; color:var(--ink-soft); margin-top:10px;
+  }
+</style>
+</head>
+<body>
+<div id="app"><div class="loading">لوڈ ہو رہا ہے…</div></div>
+
+<script>
+const STORAGE_KEYS = {
+  workers: 'workers',
+  kachi: 'kachi_entries',
+  pakki: 'pakki_entries',
+  nikasi: 'nikasi_entries',
+  farokht: 'farokht_entries',
+  masala: 'masala_entries',
+  advances: 'worker_advances',
+  buyers: 'buyers',
+  settings: 'settings'
+};
+
+let DB = {
+  workers: [],
+  kachi_entries: [],
+  pakki_entries: [],
+  nikasi_entries: [],
+  farokht_entries: [],
+  masala_entries: [],
+  worker_advances: [],
+  buyers: [],
+  settings: { rate_per_1000: 900, kiln_name: 'میرا بھٹہ' }
+};
+
+let currentTab = 'dashboard';
+let uiState = {};
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function fmtDate(d){
+  const dt = new Date(d);
+  const months = ['جنوری','فروری','مارچ','اپریل','مئی','جون','جولائی','اگست','ستمبر','اکتوبر','نومبر','دسمبر'];
+  return dt.getDate() + ' ' + months[dt.getMonth()] + ' ' + dt.getFullYear();
+}
+function fmtMoney(n){
+  n = Math.round(n || 0);
+  return n.toLocaleString('en-US') + ' روپے';
+}
+function fmtNum(n){
+  return Math.round(n||0).toLocaleString('en-US');
+}
+
+async function loadAll(){
+  for(const key of Object.values(STORAGE_KEYS)){
+    try{
+      const res = await window.storage.get(key, false);
+      if(res && res.value !== undefined){
+        DB[key] = JSON.parse(res.value);
+      }
+    }catch(e){ /* key not found yet, keep default */ }
+  }
+  render();
+}
+async function save(key){
+  try{
+    await window.storage.set(key, JSON.stringify(DB[key]), false);
+  }catch(e){
+    console.error('save failed', key, e);
+    showToast('محفوظ کرنے میں مسئلہ ہوا، دوبارہ کوشش کریں');
+  }
+}
+
+let toastTimer=null;
+function showToast(msg){
+  let t = document.getElementById('toast');
+  if(!t){
+    t = document.createElement('div');
+    t.id='toast';
+    t.className='toast';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> t.classList.remove('show'), 2200);
+}
+
+// ---------- Derived calculations ----------
+function workerBalance(workerId){
+  const earned = DB.kachi_entries.filter(e=>e.workerId===workerId).reduce((s,e)=>s+e.amount,0);
+  const advanced = DB.worker_advances.filter(a=>a.workerId===workerId).reduce((s,a)=>s+a.amount,0);
+  return earned - advanced; // positive = we owe worker, negative = worker owes us
+}
+function totalKachiQty(){ return DB.kachi_entries.reduce((s,e)=>s+e.qty,0); }
+function totalPakkiQty(){ return DB.pakki_entries.reduce((s,e)=>s+e.qty,0); }
+function totalNikasiQty(){ return DB.nikasi_entries.reduce((s,e)=>s+(e.awal||0)+(e.dom||0)+(e.barishi||0),0); }
+function totalFarokhtQty(){ return DB.farokht_entries.reduce((s,e)=>s+e.qty,0); }
+function totalFarokhtAmount(){ return DB.farokht_entries.reduce((s,e)=>s+e.total,0); }
+function totalFarokhtReceived(){ return DB.farokht_entries.reduce((s,e)=>s+e.received,0); }
+function stockPakki(){ return totalNikasiQty() - totalFarokhtQty(); }
+function todayKachi(){ return DB.kachi_entries.filter(e=>e.date===todayStr()).reduce((s,e)=>s+e.qty,0); }
+function masalaStock(){
+  const purchased = DB.masala_entries.filter(m=>m.type==='purchase').reduce((s,m)=>s+m.qty,0);
+  const used = DB.masala_entries.filter(m=>m.type==='use').reduce((s,m)=>s+m.qty,0);
+  return purchased - used;
+}
+function masalaSpent(){
+  return DB.masala_entries.filter(m=>m.type==='purchase').reduce((s,m)=>s+m.cost,0);
+}
+function totalAdvancesDue(){
+  // sum of positive balances (we owe worker) - not needed globally but useful
+  return DB.workers.reduce((s,w)=> {
+    const b = workerBalance(w.id);
+    return s + (b>0? b:0);
+  },0);
+}
+
+// ---------- Render ----------
+function render(){
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <header class="topbar">
+      <div class="row">
+        <div>
+          <h1>${DB.settings.kiln_name || 'بھٹہ کھاتہ'}</h1>
+          <div class="sub">${fmtDate(todayStr())}</div>
+        </div>
+        <button class="gear" onclick="openSettings()">⚙️</button>
+      </div>
+    </header>
+    <div class="brickrow"></div>
+    <div class="brickrow alt"></div>
+    <main id="main"></main>
+    ${bottomNav()}
+  `;
+  renderTab();
+}
+
+function bottomNav(){
+  const tabs = [
+    {id:'dashboard', ic:'🏠', lbl:'ڈیش بورڈ'},
+    {id:'kachi', ic:'🧱', lbl:'کچی ڈیلی'},
+    {id:'pakki', ic:'🔥', lbl:'پکی ڈیلی'},
+    {id:'nikasi', ic:'📤', lbl:'نکاسی'},
+    {id:'farokht', ic:'💰', lbl:'فروخت'},
+    {id:'masala', ic:'⛽', lbl:'مصالحہ'},
+    {id:'majdoor', ic:'👷', lbl:'مزدور'},
+  ];
+  return `<nav class="bottomnav">
+    ${tabs.map(t=>`<button class="${currentTab===t.id?'active':''}" onclick="switchTab('${t.id}')">
+      <span class="ic">${t.ic}</span><span>${t.lbl}</span>
+    </button>`).join('')}
+  </nav>`;
+}
+
+function switchTab(tab){ currentTab = tab; uiState={}; render(); }
+
+function renderTab(){
+  const main = document.getElementById('main');
+  if(currentTab==='dashboard') main.innerHTML = renderDashboard();
+  else if(currentTab==='kachi') main.innerHTML = renderKachi();
+  else if(currentTab==='pakki') main.innerHTML = renderPakki();
+  else if(currentTab==='nikasi') main.innerHTML = renderNikasi();
+  else if(currentTab==='farokht') main.innerHTML = renderFarokht();
+  else if(currentTab==='masala') main.innerHTML = renderMasala();
+  else if(currentTab==='majdoor') main.innerHTML = renderMajdoor();
+}
+
+// ---------- Dashboard ----------
+function renderDashboard(){
+  const dueToWorkers = totalAdvancesDue();
+  const receivable = totalFarokhtAmount() - totalFarokhtReceived();
+  return `
+    <div class="dash-grid">
+      <div class="stat"><span class="num">${fmtNum(todayKachi())}</span><span class="lbl">آج کی کچی اینٹیں</span></div>
+      <div class="stat" onclick="openStockBreakdown()" style="cursor:pointer;"><span class="num">${fmtNum(stockPakki())}</span><span class="lbl">کل اینٹ اسٹاک</span></div>
+      <div class="stat"><span class="num">${fmtNum(masalaStock())}</span><span class="lbl">مصالحہ (من) باقی</span></div>
+      <div class="stat"><span class="num">${DB.workers.length}</span><span class="lbl">کل مزدور</span></div>
+    </div>
+    <button class="big-btn secondary" style="margin-bottom:14px;" onclick="openKhataJat()">📖 کھاتہ جات دیکھیں</button>
+    <div class="card">
+      <div class="section-title" style="margin-top:0">مالی خلاصہ</div>
+      <div class="list-item"><div class="li-main">کل فروخت</div><div class="li-amt good">${fmtMoney(totalFarokhtAmount())}</div></div>
+      <div class="list-item"><div class="li-main">وصول شدہ رقم</div><div class="li-amt good">${fmtMoney(totalFarokhtReceived())}</div></div>
+      <div class="list-item"><div class="li-main">گاہکوں سے باقی رقم</div><div class="li-amt bad">${fmtMoney(receivable)}</div></div>
+      <div class="list-item"><div class="li-main">مزدوروں کو دینے والی رقم</div><div class="li-amt bad">${fmtMoney(dueToWorkers)}</div></div>
+      <div class="list-item"><div class="li-main">مصالحہ پر خرچ</div><div class="li-amt bad">${fmtMoney(masalaSpent())}</div></div>
+    </div>
+    <div class="card">
+      <div class="section-title" style="margin-top:0">پیداوار کا خلاصہ</div>
+      <div class="list-item"><div class="li-main">کل کچی اینٹیں (تیار شدہ)</div><div class="li-amt">${fmtNum(totalKachiQty())}</div></div>
+      <div class="list-item"><div class="li-main">بھٹے میں پہنچی کچی اینٹیں</div><div class="li-amt">${fmtNum(totalPakkiQty())}</div></div>
+      <div class="list-item"><div class="li-main">بارش سے خراب (پہنچتے وقت)</div><div class="li-amt bad">${fmtNum(totalRainDamagePakki())}</div></div>
+      <div class="list-item"><div class="li-main">کل نکاسی (پکی ہو کر نکلیں)</div><div class="li-amt">${fmtNum(totalNikasiQty())}</div></div>
+      <div class="list-item"><div class="li-main">کل فروخت شدہ اینٹیں</div><div class="li-amt">${fmtNum(totalFarokhtQty())}</div></div>
+    </div>
+  `;
+}
+
+// ---------- Kachi Daily ----------
+function renderKachi(){
+  const rate = DB.settings.rate_per_1000;
+  const entries = [...DB.kachi_entries].sort((a,b)=> b.date.localeCompare(a.date));
+  return `
+    <div class="card">
+      <div class="note-box">موجودہ ریٹ: <b>${fmtMoney(rate)}</b> فی ہزار اینٹ</div>
+      <button class="big-btn" style="margin-top:12px" onclick="openKachiForm()">➕ نئی اندراج (آج کی کچی)</button>
+    </div>
+    <div class="section-title">اندراجات</div>
+    <div class="card" style="padding:6px 12px;">
+      ${entries.length===0 ? emptyState('🧱','ابھی کوئی اندراج نہیں') :
+        entries.map(e=>`
+        <div class="list-item">
+          <div>
+            <div class="li-main">${escapeHtml(e.workerName)}</div>
+            <div class="li-sub">${fmtDate(e.date)} • ${fmtNum(e.qty)} اینٹیں</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="li-amt good">${fmtMoney(e.amount)}</div>
+            <button class="del-btn" onclick="deleteEntry('kachi_entries','${e.id}')">✕</button>
+          </div>
+        </div>`).join('')
+      }
+    </div>
+  `;
+}
+
+function openKachiForm(){
+  if(DB.workers.length===0){
+    showToast('پہلے مزدور کا ٹیب کھول کر مزدور شامل کریں');
+    switchTab('majdoor');
+    return;
+  }
+  uiState.kachiWorker = uiState.kachiWorker || DB.workers[0].id;
+  const rate = DB.settings.rate_per_1000;
+  openModal('کچی اینٹوں کی اندراج', `
+    <label class="field-label">مزدور منتخب کریں</label>
+    <div id="workerChips">${DB.workers.map(w=>`
+      <span class="worker-chip ${uiState.kachiWorker===w.id?'selected':''}" onclick="selectKachiWorker('${w.id}')">${escapeHtml(w.name)}</span>
+    `).join('')}</div>
+
+    <label class="field-label">تاریخ</label>
+    <input type="date" id="kachiDate" value="${todayStr()}">
+
+    <label class="field-label">آج بنائی گئی اینٹوں کی تعداد</label>
+    <input type="number" id="kachiQty" placeholder="مثلاً 1500" inputmode="numeric" oninput="updateKachiPreview()">
+
+    <div class="note-box" id="kachiPreview">رقم: 0 روپے (ریٹ ${fmtMoney(rate)} فی ہزار)</div>
+
+    <button class="big-btn" style="margin-top:16px" onclick="submitKachi()">محفوظ کریں</button>
+  `);
+}
+function selectKachiWorker(id){
+  uiState.kachiWorker = id;
+  document.getElementById('workerChips').innerHTML = DB.workers.map(w=>`
+      <span class="worker-chip ${uiState.kachiWorker===w.id?'selected':''}" onclick="selectKachiWorker('${w.id}')">${escapeHtml(w.name)}</span>
+  `).join('');
+}
+function updateKachiPreview(){
+  const qty = parseFloat(document.getElementById('kachiQty').value) || 0;
+  const rate = DB.settings.rate_per_1000;
+  const amount = (qty/1000) * rate;
+  document.getElementById('kachiPreview').textContent = `رقم: ${fmtMoney(amount)} (ریٹ ${fmtMoney(rate)} فی ہزار)`;
+}
+async function submitKachi(){
+  const qty = parseFloat(document.getElementById('kachiQty').value);
+  const date = document.getElementById('kachiDate').value || todayStr();
+  if(!qty || qty<=0){ showToast('براہ کرم اینٹوں کی درست تعداد لکھیں'); return; }
+  const worker = DB.workers.find(w=>w.id===uiState.kachiWorker);
+  const rate = DB.settings.rate_per_1000;
+  const amount = (qty/1000)*rate;
+  DB.kachi_entries.push({id:uid(), date, workerId:worker.id, workerName:worker.name, qty, rate, amount});
+  await save('kachi_entries');
+  closeModal();
+  showToast('اندراج محفوظ ہو گیا');
+  renderTab();
+}
+
+// ---------- Pakki Daily (raw bricks reached kiln, per worker) ----------
+function totalRainDamagePakki(){ return DB.pakki_entries.reduce((s,e)=>s+(e.rainDamage||0),0); }
+function renderPakki(){
+  const entries = [...DB.pakki_entries].sort((a,b)=> b.date.localeCompare(a.date));
+  return `
+    <div class="dash-grid">
+      <div class="stat"><span class="num">${fmtNum(totalPakkiQty())}</span><span class="lbl">کل بھٹے میں پہنچی کچی اینٹ</span></div>
+      <div class="stat"><span class="num" style="color:var(--bad)">${fmtNum(totalRainDamagePakki())}</span><span class="lbl">بارش سے خراب</span></div>
+    </div>
+    <button class="big-btn" onclick="openPakkiForm()">➕ آج کی پکی ڈیلی</button>
+    <div class="section-title">اندراجات</div>
+    <div class="card" style="padding:6px 12px;">
+      ${entries.length===0 ? emptyState('🔥','ابھی کوئی اندراج نہیں') :
+        entries.map(e=>`
+        <div class="list-item">
+          <div>
+            <div class="li-main">${escapeHtml(e.workerName||'—')}</div>
+            <div class="li-sub">${fmtDate(e.date)} • ${fmtNum(e.qty)} اینٹیں بھٹے میں پہنچیں${e.rainDamage? ' • بارش سے خراب: '+fmtNum(e.rainDamage):''}${e.note? ' • '+escapeHtml(e.note):''}</div>
+          </div>
+          <button class="del-btn" onclick="deleteEntry('pakki_entries','${e.id}')">✕</button>
+        </div>`).join('')
+      }
+    </div>
+  `;
+}
+function openPakkiForm(){
+  if(DB.workers.length===0){
+    showToast('پہلے مزدور کا ٹیب کھول کر مزدور شامل کریں');
+    switchTab('majdoor');
+    return;
+  }
+  uiState.pakkiWorker = uiState.pakkiWorker || DB.workers[0].id;
+  openModal('پکی ڈیلی کی اندراج', `
+    <label class="field-label">مزدور منتخب کریں</label>
+    <div id="pakkiWorkerChips">${DB.workers.map(w=>`
+      <span class="worker-chip ${uiState.pakkiWorker===w.id?'selected':''}" onclick="selectPakkiWorker('${w.id}')">${escapeHtml(w.name)}</span>
+    `).join('')}</div>
+
+    <label class="field-label">تاریخ</label>
+    <input type="date" id="pkDate" value="${todayStr()}">
+    <label class="field-label">اس مزدور کی کتنی کچی اینٹیں آج بھٹے میں پہنچائی گئیں</label>
+    <input type="number" id="pkQty" inputmode="numeric" placeholder="مثلاً 2000">
+    <label class="field-label">بارش کی وجہ سے کتنی اینٹیں خراب ہوئیں (اگر کوئی نہیں تو خالی چھوڑ دیں)</label>
+    <input type="number" id="pkRain" inputmode="numeric" placeholder="0">
+    <label class="field-label">نوٹ (اختیاری)</label>
+    <input type="text" id="pkNote" placeholder="مثلاً بھٹہ نمبر 2">
+    <button class="big-btn" style="margin-top:16px" onclick="submitPakki()">محفوظ کریں</button>
+  `);
+}
+function selectPakkiWorker(id){
+  uiState.pakkiWorker = id;
+  document.getElementById('pakkiWorkerChips').innerHTML = DB.workers.map(w=>`
+      <span class="worker-chip ${uiState.pakkiWorker===w.id?'selected':''}" onclick="selectPakkiWorker('${w.id}')">${escapeHtml(w.name)}</span>
+  `).join('');
+}
+async function submitPakki(){
+  const qty = parseFloat(document.getElementById('pkQty').value);
+  const rainDamage = parseFloat(document.getElementById('pkRain').value)||0;
+  const date = document.getElementById('pkDate').value || todayStr();
+  const note = document.getElementById('pkNote').value.trim();
+  if(!qty || qty<=0){ showToast('براہ کرم درست تعداد لکھیں'); return; }
+  const worker = DB.workers.find(w=>w.id===uiState.pakkiWorker);
+  DB.pakki_entries.push({id:uid(), date, workerId:worker.id, workerName:worker.name, qty, rainDamage, note});
+  await save('pakki_entries');
+  closeModal();
+  showToast('محفوظ ہو گیا');
+  renderTab();
+}
+
+// ---------- Nikasi (fired bricks removed, by quality) ----------
+function nikasiTotals(){
+  return DB.nikasi_entries.reduce((acc,e)=>{
+    acc.awal += (e.awal||0); acc.dom += (e.dom||0); acc.barishi += (e.barishi||0);
+    return acc;
+  }, {awal:0,dom:0,barishi:0});
+}
+function qualityLabel(q){ return q==='awal'?'اول':(q==='dom'?'دوم':(q==='barishi'?'بارشی':'')); }
+function qualitySoldQty(q){ return DB.farokht_entries.filter(e=>e.quality===q).reduce((s,e)=>s+e.qty,0); }
+function qualityStock(q){ const t = nikasiTotals(); return (t[q]||0) - qualitySoldQty(q); }
+function renderNikasi(){
+  const entries = [...DB.nikasi_entries].sort((a,b)=> b.date.localeCompare(a.date));
+  const t = nikasiTotals();
+  return `
+    <div class="dash-grid">
+      <div class="stat"><span class="num">${fmtNum(t.awal)}</span><span class="lbl">اول کوالٹی</span></div>
+      <div class="stat"><span class="num">${fmtNum(t.dom)}</span><span class="lbl">دوم کوالٹی</span></div>
+      <div class="stat"><span class="num" style="color:var(--bad)">${fmtNum(t.barishi)}</span><span class="lbl">بارشی</span></div>
+      <div class="stat"><span class="num">${fmtNum(totalNikasiQty())}</span><span class="lbl">کل نکاسی</span></div>
+    </div>
+    <button class="big-btn" onclick="openNikasiForm()">➕ نکاسی کی اندراج</button>
+    <div class="section-title">اندراجات</div>
+    <div class="card" style="padding:6px 12px;">
+      ${entries.length===0 ? emptyState('📤','ابھی کوئی اندراج نہیں') :
+        entries.map(e=>`
+        <div class="list-item">
+          <div>
+            <div class="li-main">کل ${fmtNum((e.awal||0)+(e.dom||0)+(e.barishi||0))} اینٹیں</div>
+            <div class="li-sub">${fmtDate(e.date)} • اول ${fmtNum(e.awal||0)} • دوم ${fmtNum(e.dom||0)} • بارشی ${fmtNum(e.barishi||0)}${e.note? ' • '+escapeHtml(e.note):''}</div>
+          </div>
+          <button class="del-btn" onclick="deleteEntry('nikasi_entries','${e.id}')">✕</button>
+        </div>`).join('')
+      }
+    </div>
+  `;
+}
+function openNikasiForm(){
+  openModal('نکاسی کی اندراج', `
+    <label class="field-label">تاریخ</label>
+    <input type="date" id="nkDate" value="${todayStr()}">
+    <label class="field-label">اول کوالٹی اینٹیں</label>
+    <input type="number" id="nkAwal" inputmode="numeric" placeholder="0">
+    <label class="field-label">دوم کوالٹی اینٹیں</label>
+    <input type="number" id="nkDom" inputmode="numeric" placeholder="0">
+    <label class="field-label">بارشی اینٹیں</label>
+    <input type="number" id="nkBarishi" inputmode="numeric" placeholder="0">
+    <label class="field-label">نوٹ (اختیاری)</label>
+    <input type="text" id="nkNote" placeholder="مثلاً بھٹہ نمبر 2">
+    <button class="big-btn" style="margin-top:16px" onclick="submitNikasi()">محفوظ کریں</button>
+  `);
+}
+async function submitNikasi(){
+  const awal = parseFloat(document.getElementById('nkAwal').value)||0;
+  const dom = parseFloat(document.getElementById('nkDom').value)||0;
+  const barishi = parseFloat(document.getElementById('nkBarishi').value)||0;
+  const date = document.getElementById('nkDate').value || todayStr();
+  const note = document.getElementById('nkNote').value.trim();
+  if(awal+dom+barishi<=0){ showToast('براہ کرم کم از کم ایک تعداد لکھیں'); return; }
+  DB.nikasi_entries.push({id:uid(), date, awal, dom, barishi, note});
+  await save('nikasi_entries');
+  closeModal();
+  showToast('محفوظ ہو گیا');
+  renderTab();
+}
+
+function openStockBreakdown(){
+  openModal('اسٹاک کی تفصیل', `
+    <div class="list-item"><div class="li-main">اول کوالٹی</div><div class="li-amt">${fmtNum(qualityStock('awal'))}</div></div>
+    <div class="list-item"><div class="li-main">دوم کوالٹی</div><div class="li-amt">${fmtNum(qualityStock('dom'))}</div></div>
+    <div class="list-item"><div class="li-main">بارشی</div><div class="li-amt bad">${fmtNum(qualityStock('barishi'))}</div></div>
+    <div class="divider"></div>
+    <div class="list-item"><div class="li-main">کل اسٹاک</div><div class="li-amt good">${fmtNum(stockPakki())}</div></div>
+  `);
+}
+
+// ---------- Farokht (Sales) ----------
+function buyerBalance(buyerId){
+  const entries = DB.farokht_entries.filter(e=>e.buyerId===buyerId);
+  const total = entries.reduce((s,e)=>s+e.total,0);
+  const received = entries.reduce((s,e)=>s+e.received,0);
+  return {total, received, due: total-received, count: entries.length};
+}
+function renderFarokht(){
+  const entries = [...DB.farokht_entries].sort((a,b)=> b.date.localeCompare(a.date));
+  return `
+    <div class="dash-grid">
+      <div class="stat"><span class="num">${fmtNum(stockPakki())}</span><span class="lbl">موجودہ اسٹاک</span></div>
+      <div class="stat"><span class="num" style="color:var(--bad)">${fmtMoney(totalFarokhtAmount()-totalFarokhtReceived())}</span><span class="lbl">باقی وصولی</span></div>
+    </div>
+    <div class="row-flex">
+      <button class="big-btn" onclick="openFarokhtForm()">➕ نئی فروخت</button>
+      <button class="big-btn secondary" onclick="openBuyersList()">🧾 خریداروں کا کھاتہ</button>
+    </div>
+    <div class="section-title">فروخت کی تفصیل</div>
+    <div class="card" style="padding:6px 12px;">
+      ${entries.length===0 ? emptyState('💰','ابھی کوئی فروخت نہیں') :
+        entries.map(e=>{
+          const due = e.total - e.received;
+          const name = e.buyerName || e.buyer || 'گاہک';
+          return `
+        <div class="list-item" onclick="openFarokhtDetail('${e.id}')" style="cursor:pointer;">
+          <div>
+            <div class="li-main">${escapeHtml(name)} • ${fmtNum(e.qty)} اینٹیں${e.quality? ' ('+qualityLabel(e.quality)+')':''}</div>
+            <div class="li-sub">${fmtDate(e.date)} • ریٹ ${fmtMoney(e.price)}/ہزار</div>
+            <div style="margin-top:4px;">${due>0?`<span class="badge bad">باقی ${fmtMoney(due)}</span>`:`<span class="badge good">مکمل وصول</span>`}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="li-amt good">${fmtMoney(e.total)}</div>
+            <button class="del-btn" onclick="event.stopPropagation(); deleteEntry('farokht_entries','${e.id}')">✕</button>
+          </div>
+        </div>`;
+        }).join('')
+      }
+    </div>
+  `;
+}
+function openFarokhtForm(){
+  uiState.fkBuyerId = uiState.fkBuyerId || (DB.buyers[0] && DB.buyers[0].id) || null;
+  uiState.fkQuality = uiState.fkQuality || 'awal';
+  openModal('نئی فروخت', `
+    <label class="field-label">خریدار منتخب کریں</label>
+    <div id="buyerChips">${buyerChipsHtml()}</div>
+
+    <label class="field-label">کون سی کوالٹی بھیجی جا رہی ہے</label>
+    <div id="qualityChips">${qualityChipsHtml()}</div>
+
+    <label class="field-label">تاریخ</label>
+    <input type="date" id="fkDate" value="${todayStr()}">
+    <label class="field-label">فروخت شدہ اینٹوں کی تعداد</label>
+    <input type="number" id="fkQty" inputmode="numeric" placeholder="مثلاً 5000" oninput="updateFarokhtPreview()">
+    <label class="field-label">قیمت فی ہزار</label>
+    <input type="number" id="fkPrice" inputmode="numeric" placeholder="مثلاً 12000" oninput="updateFarokhtPreview()">
+    <div class="note-box" id="fkPreview">کل رقم: 0 روپے</div>
+    <label class="field-label">کتنی رقم ابھی وصول ہوئی؟</label>
+    <input type="number" id="fkReceived" inputmode="numeric" placeholder="0">
+    <button class="big-btn" style="margin-top:16px" onclick="submitFarokht()">محفوظ کریں</button>
+  `);
+}
+function qualityChipsHtml(){
+  const qualities = ['awal','dom','barishi'];
+  return qualities.map(q=>`
+    <span class="worker-chip ${uiState.fkQuality===q?'selected':''}" onclick="selectQualityChip('${q}')">${qualityLabel(q)} (${fmtNum(qualityStock(q))} موجود)</span>
+  `).join('');
+}
+function selectQualityChip(q){
+  uiState.fkQuality = q;
+  document.getElementById('qualityChips').innerHTML = qualityChipsHtml();
+}
+function buyerChipsHtml(){
+  let html = `<div id="buyerChipsInner">`;
+  html += DB.buyers.map(b=>`
+    <span class="worker-chip ${uiState.fkBuyerId===b.id?'selected':''}" onclick="selectBuyerChip('${b.id}')">${escapeHtml(b.name)}</span>
+  `).join('');
+  html += `<span class="worker-chip" style="background:var(--card); border:2px dashed var(--clay); color:var(--clay-dark);" onclick="showNewBuyerInput()">➕ نیا خریدار</span>`;
+  html += `</div><div id="newBuyerBox"></div>`;
+  return html;
+}
+function selectBuyerChip(id){
+  uiState.fkBuyerId = id;
+  document.getElementById('buyerChips').innerHTML = buyerChipsHtml();
+}
+function showNewBuyerInput(){
+  const box = document.getElementById('newBuyerBox');
+  if(!box) return;
+  box.innerHTML = `
+    <div style="margin-top:10px;">
+      <input type="text" id="newBuyerNameInput" placeholder="خریدار کا نام لکھیں">
+      <button class="big-btn" style="margin-top:8px;" onclick="confirmNewBuyer()">شامل کریں</button>
+    </div>
+  `;
+  const inp = document.getElementById('newBuyerNameInput');
+  if(inp) inp.focus();
+}
+async function confirmNewBuyer(){
+  const inp = document.getElementById('newBuyerNameInput');
+  const name = inp ? inp.value.trim() : '';
+  if(!name){ showToast('نام لکھیں'); return; }
+  const b = {id:uid(), name};
+  DB.buyers.push(b);
+  await save('buyers');
+  uiState.fkBuyerId = b.id;
+  const chipsEl = document.getElementById('buyerChips');
+  if(chipsEl) chipsEl.innerHTML = buyerChipsHtml();
+  showToast('خریدار شامل ہو گیا');
+}
+function updateFarokhtPreview(){
+  const qty = parseFloat(document.getElementById('fkQty').value)||0;
+  const price = parseFloat(document.getElementById('fkPrice').value)||0;
+  const total = (qty/1000)*price;
+  document.getElementById('fkPreview').textContent = `کل رقم: ${fmtMoney(total)}`;
+}
+async function submitFarokht(){
+  const qty = parseFloat(document.getElementById('fkQty').value);
+  const price = parseFloat(document.getElementById('fkPrice').value);
+  const received = parseFloat(document.getElementById('fkReceived').value)||0;
+  const date = document.getElementById('fkDate').value || todayStr();
+  const quality = uiState.fkQuality || 'awal';
+  if(!uiState.fkBuyerId){ showToast('براہ کرم خریدار منتخب کریں یا نیا خریدار شامل کریں'); return; }
+  if(!qty || qty<=0 || !price || price<=0){ showToast('براہ کرم تعداد اور قیمت درست لکھیں'); return; }
+  const available = qualityStock(quality);
+  if(qty > available){ showToast(`${qualityLabel(quality)} میں صرف ${fmtNum(available)} اینٹیں موجود ہیں`); return; }
+  const buyer = DB.buyers.find(b=>b.id===uiState.fkBuyerId);
+  const total = (qty/1000)*price;
+  DB.farokht_entries.push({id:uid(), date, buyerId:buyer.id, buyerName:buyer.name, quality, qty, price, total, received});
+  await save('farokht_entries');
+  closeModal();
+  showToast('فروخت محفوظ ہو گئی');
+  renderTab();
+}
+function openBuyersList(){
+  openModal('خریداروں کا کھاتہ', `
+    ${DB.buyers.length===0 ? emptyState('🧾','ابھی کوئی خریدار شامل نہیں') :
+      DB.buyers.map(b=>{
+        const bal = buyerBalance(b.id);
+        return `
+        <div class="list-item" onclick="openBuyerDetail('${b.id}')" style="cursor:pointer;">
+          <div>
+            <div class="li-main">${escapeHtml(b.name)}</div>
+            <div class="li-sub">${bal.count} فروخت</div>
+          </div>
+          <div class="li-amt ${bal.due>0?'bad':'good'}">${bal.due>0? fmtMoney(bal.due)+' باقی' : 'مکمل وصول'}</div>
+        </div>`;
+      }).join('')
+    }
+  `);
+}
+function openBuyerDetail(id){
+  const b = DB.buyers.find(x=>x.id===id);
+  if(!b) return;
+  const entries = DB.farokht_entries.filter(e=>e.buyerId===id).sort((a,b2)=> b2.date.localeCompare(a.date));
+  const bal = buyerBalance(id);
+  openModal(b.name, `
+    <div class="note-box" style="font-size:15px;">
+      کل خریداری: <b>${fmtMoney(bal.total)}</b> • وصول شدہ: <b style="color:var(--good)">${fmtMoney(bal.received)}</b> • باقی: <b style="color:var(--bad)">${fmtMoney(bal.due)}</b>
+    </div>
+    <div class="divider"></div>
+    <div class="section-title" style="font-size:16px;">خریداری کی تاریخ</div>
+    ${entries.length===0 ? emptyState('📋','ابھی کوئی خریداری نہیں') :
+      entries.map(e=>{
+        const due = e.total - e.received;
+        return `
+        <div class="list-item" onclick="openFarokhtDetail('${e.id}')" style="cursor:pointer;">
+          <div>
+            <div class="li-main">${fmtNum(e.qty)} اینٹیں${e.quality? ' ('+qualityLabel(e.quality)+')':''}</div>
+            <div class="li-sub">${fmtDate(e.date)} • ریٹ ${fmtMoney(e.price)}/ہزار${due>0? ' • باقی '+fmtMoney(due):' • مکمل وصول'}</div>
+          </div>
+          <div class="li-amt good">${fmtMoney(e.total)}</div>
+        </div>`;
+      }).join('')
+    }
+  `);
+}
+function openFarokhtDetail(id){
+  const e = DB.farokht_entries.find(x=>x.id===id);
+  if(!e) return;
+  const due = e.total - e.received;
+  const name = e.buyerName || e.buyer || 'گاہک';
+  openModal(escapeHtml(name), `
+    <div class="list-item"><div class="li-main">تعداد</div><div class="li-amt">${fmtNum(e.qty)} اینٹیں${e.quality? ' ('+qualityLabel(e.quality)+')':''}</div></div>
+    <div class="list-item"><div class="li-main">ریٹ</div><div class="li-amt">${fmtMoney(e.price)}/ہزار</div></div>
+    <div class="list-item"><div class="li-main">کل رقم</div><div class="li-amt">${fmtMoney(e.total)}</div></div>
+    <div class="list-item"><div class="li-main">وصول شدہ</div><div class="li-amt good">${fmtMoney(e.received)}</div></div>
+    <div class="list-item"><div class="li-main">باقی رقم</div><div class="li-amt bad">${fmtMoney(due)}</div></div>
+    <div class="divider"></div>
+    ${due>0 ? `
+    <label class="field-label">مزید کتنی رقم وصول ہوئی؟</label>
+    <input type="number" id="fkExtraReceived" inputmode="numeric" placeholder="مثلاً 5000">
+    <button class="big-btn" style="margin-top:16px" onclick="submitReceivePayment('${e.id}')">وصولی درج کریں</button>
+    ` : `<div class="note-box">اس فروخت کی مکمل رقم وصول ہو چکی ہے۔</div>`}
+  `);
+}
+async function submitReceivePayment(id){
+  const e = DB.farokht_entries.find(x=>x.id===id);
+  if(!e) return;
+  const extra = parseFloat(document.getElementById('fkExtraReceived').value);
+  if(!extra || extra<=0){ showToast('درست رقم لکھیں'); return; }
+  const due = e.total - e.received;
+  if(extra > due){ showToast('یہ رقم باقی رقم سے زیادہ ہے'); return; }
+  e.received += extra;
+  await save('farokht_entries');
+  showToast('وصولی محفوظ ہو گئی');
+  closeModal();
+  renderTab();
+}
+
+// ---------- Masala (Fuel) ----------
+function renderMasala(){
+  uiState.masalaTab = uiState.masalaTab || 'all';
+  const entries = [...DB.masala_entries].sort((a,b)=> b.date.localeCompare(a.date))
+    .filter(e=> uiState.masalaTab==='all' || e.type===uiState.masalaTab);
+  return `
+    <div class="dash-grid">
+      <div class="stat"><span class="num">${fmtNum(masalaStock())}</span><span class="lbl">موجودہ مصالحہ (من)</span></div>
+      <div class="stat"><span class="num">${fmtMoney(masalaSpent())}</span><span class="lbl">کل خرچہ</span></div>
+    </div>
+    <div class="row-flex">
+      <button class="big-btn" onclick="openMasalaForm('purchase')">➕ خریداری</button>
+      <button class="big-btn secondary" onclick="openMasalaForm('use')">🔥 استعمال</button>
+    </div>
+    <div class="section-title">تفصیل</div>
+    <div class="tabbar">
+      <button class="${uiState.masalaTab==='all'?'active':''}" onclick="setMasalaTab('all')">تمام</button>
+      <button class="${uiState.masalaTab==='purchase'?'active':''}" onclick="setMasalaTab('purchase')">خریداری</button>
+      <button class="${uiState.masalaTab==='use'?'active':''}" onclick="setMasalaTab('use')">استعمال</button>
+    </div>
+    <div class="card" style="padding:6px 12px;">
+      ${entries.length===0 ? emptyState('⛽','ابھی کوئی اندراج نہیں') :
+        entries.map(e=>`
+        <div class="list-item">
+          <div>
+            <div class="li-main">${e.type==='purchase'?'خریداری':'استعمال'} • ${fmtNum(e.qty)} من</div>
+            <div class="li-sub">${fmtDate(e.date)}${e.note? ' • '+escapeHtml(e.note):''}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            ${e.type==='purchase'?`<div class="li-amt bad">${fmtMoney(e.cost)}</div>`:''}
+            <button class="del-btn" onclick="deleteEntry('masala_entries','${e.id}')">✕</button>
+          </div>
+        </div>`).join('')
+      }
+    </div>
+  `;
+}
+function setMasalaTab(t){ uiState.masalaTab=t; renderTab(); }
+function openMasalaForm(type){
+  openModal(type==='purchase'?'مصالحہ کی خریداری':'مصالحہ کا استعمال', `
+    <label class="field-label">تاریخ</label>
+    <input type="date" id="msDate" value="${todayStr()}">
+    <label class="field-label">مقدار (من)</label>
+    <input type="number" id="msQty" inputmode="numeric" placeholder="مثلاً 50">
+    ${type==='purchase' ? `
+    <label class="field-label">قیمت (روپے)</label>
+    <input type="number" id="msCost" inputmode="numeric" placeholder="مثلاً 25000">
+    ` : ''}
+    <label class="field-label">نوٹ (اختیاری)</label>
+    <input type="text" id="msNote" placeholder="مثلاً کوئلہ / لکڑی">
+    <button class="big-btn" style="margin-top:16px" onclick="submitMasala('${type}')">محفوظ کریں</button>
+  `);
+}
+async function submitMasala(type){
+  const qty = parseFloat(document.getElementById('msQty').value);
+  const date = document.getElementById('msDate').value || todayStr();
+  const note = document.getElementById('msNote').value.trim();
+  if(!qty || qty<=0){ showToast('براہ کرم درست مقدار لکھیں'); return; }
+  let cost = 0;
+  if(type==='purchase'){
+    cost = parseFloat(document.getElementById('msCost').value)||0;
+    if(masalaStock() , qty > 999999){}
+  } else {
+    if(qty > masalaStock()){
+      showToast('موجودہ اسٹاک سے زیادہ استعمال درج نہیں ہو سکتا');
+      return;
+    }
+  }
+  DB.masala_entries.push({id:uid(), date, type, qty, cost, note});
+  await save('masala_entries');
+  closeModal();
+  showToast('محفوظ ہو گیا');
+  renderTab();
+}
+
+// ---------- Majdoor (Workers) ----------
+function renderMajdoor(){
+  const workers = DB.workers;
+  return `
+    <div class="row-flex">
+      <button class="big-btn" onclick="openAddWorker()">➕ نیا مزدور</button>
+      <button class="big-btn secondary" onclick="openWeeklyReport()">📅 جمعرات کا کھاتہ</button>
+    </div>
+    <div class="section-title">مزدوروں کی فہرست</div>
+    ${workers.length===0 ? `<div class="card">${emptyState('👷','ابھی کوئی مزدور شامل نہیں')}</div>` :
+      workers.map(w=>{
+        const bal = workerBalance(w.id);
+        const totalQty = DB.kachi_entries.filter(e=>e.workerId===w.id).reduce((s,e)=>s+e.qty,0);
+        return `
+        <div class="card" onclick="openWorkerDetail('${w.id}')" style="cursor:pointer;">
+          <div class="flex-mid">
+            <div class="icon-circle">👷</div>
+            <div style="flex:1;">
+              <div class="li-main">${escapeHtml(w.name)}</div>
+              <div class="li-sub">کل اینٹیں: ${fmtNum(totalQty)}</div>
+            </div>
+            <div style="text-align:left;">
+              <div class="li-amt ${bal>=0?'good':'bad'}">${fmtMoney(Math.abs(bal))}</div>
+              <div class="li-sub">${bal>=0?'دینا ہے':'زیادہ ایڈوانس'}</div>
+            </div>
+          </div>
+        </div>`;
+      }).join('')
+    }
+  `;
+}
+function openAddWorker(){
+  openModal('نیا مزدور شامل کریں', `
+    <label class="field-label">مزدور کا نام</label>
+    <input type="text" id="wName" placeholder="مثلاً اکرم مسیح">
+    <button class="big-btn" style="margin-top:16px" onclick="submitWorker()">شامل کریں</button>
+  `);
+}
+async function submitWorker(){
+  const name = document.getElementById('wName').value.trim();
+  if(!name){ showToast('نام لکھیں'); return; }
+  DB.workers.push({id:uid(), name});
+  await save('workers');
+  closeModal();
+  showToast('مزدور شامل ہو گیا');
+  renderTab();
+}
+function openWorkerDetail(id){
+  const w = DB.workers.find(x=>x.id===id);
+  if(!w) return;
+  const bal = workerBalance(id);
+  const kachi = DB.kachi_entries.filter(e=>e.workerId===id).sort((a,b)=>b.date.localeCompare(a.date));
+  const adv = DB.worker_advances.filter(a=>a.workerId===id).sort((a,b)=>b.date.localeCompare(a.date));
+  const combined = [
+    ...kachi.map(e=>({date:e.date, kind:'earn', qty:e.qty, amount:e.amount})),
+    ...adv.map(a=>({date:a.date, kind:(a.type||'advance'), amount:a.amount, note:a.note}))
+  ].sort((a,b)=> b.date.localeCompare(a.date));
+
+  openModal(w.name, `
+    <div class="note-box" style="font-size:15px;">
+      ${bal>=0
+        ? `مزدور کو دینے والی رقم: <b style="color:var(--good)">${fmtMoney(bal)}</b>`
+        : `مزدور سے زیادہ ادائیگی ہو چکی: <b style="color:var(--bad)">${fmtMoney(Math.abs(bal))}</b>`}
+    </div>
+    <div class="row-flex" style="margin-top:14px;">
+      <button class="big-btn" onclick="openAdvanceForm('${id}','payment')">🧾 ادائیگی کریں</button>
+      <button class="big-btn secondary" onclick="openAdvanceForm('${id}','advance')">💵 پیشگی دیں</button>
+    </div>
+    <div class="divider"></div>
+    <div class="section-title" style="font-size:16px;">لین دین کی تفصیل</div>
+    ${combined.length===0? emptyState('📋','ابھی کوئی ریکارڈ نہیں') :
+      combined.map(c=>{
+        if(c.kind==='earn'){
+          return `<div class="list-item"><div><div class="li-main">اینٹیں بنائیں</div><div class="li-sub">${fmtDate(c.date)} • ${fmtNum(c.qty)} اینٹیں</div></div><div class="li-amt good">+${fmtMoney(c.amount)}</div></div>`;
+        } else if(c.kind==='payment'){
+          return `<div class="list-item"><div><div class="li-main">ادائیگی${c.note? ' • '+escapeHtml(c.note):''}</div><div class="li-sub">${fmtDate(c.date)}</div></div><div class="li-amt bad">-${fmtMoney(c.amount)}</div></div>`;
+        } else {
+          return `<div class="list-item"><div><div class="li-main">پیشگی${c.note? ' • '+escapeHtml(c.note):''}</div><div class="li-sub">${fmtDate(c.date)}</div></div><div class="li-amt bad">-${fmtMoney(c.amount)}</div></div>`;
+        }
+      }).join('')
+    }
+  `);
+}
+function openAdvanceForm(workerId, type){
+  type = type || 'advance';
+  const title = type==='payment' ? 'مزدور کو ادائیگی' : 'پیشگی رقم درج کریں';
+  openModal(title, `
+    <label class="field-label">تاریخ</label>
+    <input type="date" id="advDate" value="${todayStr()}">
+    <label class="field-label">رقم</label>
+    <input type="number" id="advAmount" inputmode="numeric" placeholder="مثلاً 5000">
+    <label class="field-label">نوٹ (اختیاری)</label>
+    <input type="text" id="advNote" placeholder="${type==='payment'?'مثلاً جمعرات کا حساب':'مثلاً عید کے لیے'}">
+    <button class="big-btn" style="margin-top:16px" onclick="submitAdvance('${workerId}','${type}')">محفوظ کریں</button>
+  `);
+}
+async function submitAdvance(workerId, type){
+  type = type || 'advance';
+  const amount = parseFloat(document.getElementById('advAmount').value);
+  const date = document.getElementById('advDate').value || todayStr();
+  const note = document.getElementById('advNote').value.trim();
+  if(!amount || amount<=0){ showToast('درست رقم لکھیں'); return; }
+  DB.worker_advances.push({id:uid(), workerId, date, amount, note, type});
+  await save('worker_advances');
+  showToast(type==='payment' ? 'ادائیگی محفوظ ہو گئی' : 'پیشگی محفوظ ہو گئی');
+  openWorkerDetail(workerId);
+}
+// ---------- Weekly (Thursday) Ledger ----------
+function getThursdayOnOrBefore(dateStr){
+  const dt = new Date(dateStr+'T00:00:00');
+  const day = dt.getDay(); // Sun=0 ... Thu=4
+  const diff = (day - 4 + 7) % 7;
+  dt.setDate(dt.getDate() - diff);
+  return dt.toISOString().slice(0,10);
+}
+function openWeeklyReport(){
+  if(!uiState.weekEndDate) uiState.weekEndDate = getThursdayOnOrBefore(todayStr());
+  renderWeeklyReportModal();
+}
+function shiftWeek(delta){
+  const d = new Date(uiState.weekEndDate+'T00:00:00');
+  d.setDate(d.getDate()+7*delta);
+  uiState.weekEndDate = d.toISOString().slice(0,10);
+  renderWeeklyReportModal();
+}
+function renderWeeklyReportModal(){
+  const weekEnd = uiState.weekEndDate;
+  const endDt = new Date(weekEnd+'T00:00:00');
+  const startDt = new Date(endDt); startDt.setDate(startDt.getDate()-6);
+  const startStr = startDt.toISOString().slice(0,10);
+  const rows = DB.workers.map(w=>{
+    const earned = DB.kachi_entries.filter(e=>e.workerId===w.id && e.date>=startStr && e.date<=weekEnd).reduce((s,e)=>s+e.amount,0);
+    const paid = DB.worker_advances.filter(a=>a.workerId===w.id && a.date>=startStr && a.date<=weekEnd).reduce((s,a)=>s+a.amount,0);
+    const overallBal = workerBalance(w.id);
+    return {id:w.id, name:w.name, earned, paid, overallBal};
+  });
+  const totalEarned = rows.reduce((s,r)=>s+r.earned,0);
+  const totalPaid = rows.reduce((s,r)=>s+r.paid,0);
+  openModal('جمعرات کا ہفتہ وار کھاتہ', `
+    <div class="row-flex" style="margin-bottom:10px;">
+      <button class="big-btn secondary" onclick="shiftWeek(-1)">◀ پچھلا ہفتہ</button>
+      <button class="big-btn secondary" onclick="shiftWeek(1)">اگلا ہفتہ ▶</button>
+    </div>
+    <div class="note-box">${fmtDate(startStr)} تا ${fmtDate(weekEnd)}</div>
+    <div class="divider"></div>
+    ${rows.length===0? emptyState('📅','کوئی مزدور شامل نہیں') :
+      rows.map(r=>`
+      <div class="list-item" onclick="openWeeklyWorkerDetail('${r.id}')" style="cursor:pointer;">
+        <div>
+          <div class="li-main">${escapeHtml(r.name)}</div>
+          <div class="li-sub">اس ہفتے بنائے: ${fmtMoney(r.earned)} • دیے گئے: ${fmtMoney(r.paid)}</div>
+        </div>
+        <div style="text-align:left;">
+          <div class="li-amt ${r.overallBal>=0?'good':'bad'}">${fmtMoney(Math.abs(r.overallBal))}</div>
+          <div class="li-sub">${r.overallBal>=0?'کل باقی':'زائد ادا'}</div>
+        </div>
+      </div>`).join('')
+    }
+    <div class="divider"></div>
+    <div class="list-item"><div class="li-main">اس ہفتے کل بنائے</div><div class="li-amt good">${fmtMoney(totalEarned)}</div></div>
+    <div class="list-item"><div class="li-main">اس ہفتے کل دیے گئے</div><div class="li-amt bad">${fmtMoney(totalPaid)}</div></div>
+  `);
+}
+function openWeeklyWorkerDetail(workerId){
+  const worker = DB.workers.find(w=>w.id===workerId);
+  if(!worker) return;
+  const weekEnd = uiState.weekEndDate;
+  const endDt = new Date(weekEnd+'T00:00:00');
+  const startDt = new Date(endDt); startDt.setDate(startDt.getDate()-6);
+  const startStr = startDt.toISOString().slice(0,10);
+  const dayEntries = DB.kachi_entries.filter(e=>e.workerId===workerId && e.date>=startStr && e.date<=weekEnd).sort((a,b)=>a.date.localeCompare(b.date));
+  const paidEntries = DB.worker_advances.filter(a=>a.workerId===workerId && a.date>=startStr && a.date<=weekEnd).sort((a,b)=>a.date.localeCompare(b.date));
+  const earned = dayEntries.reduce((s,e)=>s+e.amount,0);
+  const paidThisWeek = paidEntries.reduce((s,a)=>s+a.amount,0);
+  const overallBal = workerBalance(workerId);
+  openModal(worker.name + ' — ہفتہ وار تفصیل', `
+    <div class="note-box">${fmtDate(startStr)} تا ${fmtDate(weekEnd)}</div>
+    <div class="section-title" style="font-size:15px;">روزانہ بنائی گئی اینٹیں</div>
+    ${dayEntries.length===0? emptyState('🧱','اس ہفتے کوئی اندراج نہیں') :
+      dayEntries.map(e=>`<div class="list-item"><div class="li-main">${fmtDate(e.date)}</div><div class="li-amt good">${fmtNum(e.qty)} اینٹیں — ${fmtMoney(e.amount)}</div></div>`).join('')
+    }
+    ${paidEntries.length>0 ? `
+    <div class="section-title" style="font-size:15px;">اس ہفتے دی گئی رقم</div>
+    ${paidEntries.map(a=>`<div class="list-item"><div class="li-main">${a.type==='payment'?'ادائیگی':'پیشگی'}${a.note?' • '+escapeHtml(a.note):''}</div><div class="li-amt bad">${fmtDate(a.date)} — ${fmtMoney(a.amount)}</div></div>`).join('')}
+    ` : ''}
+    <div class="divider"></div>
+    <div class="list-item"><div class="li-main">اس ہفتے کی کمائی</div><div class="li-amt good">${fmtMoney(earned)}</div></div>
+    <div class="list-item"><div class="li-main">اس ہفتے دی گئی رقم</div><div class="li-amt bad">${fmtMoney(paidThisWeek)}</div></div>
+    <div class="list-item"><div class="li-main">کل ملا کر باقی رقم</div><div class="li-amt ${overallBal>=0?'good':'bad'}">${fmtMoney(Math.abs(overallBal))}</div></div>
+    <div class="divider"></div>
+    <label class="field-label">اسے ابھی رقم ادا کریں</label>
+    <input type="number" id="wkPayAmount" inputmode="numeric" placeholder="مثلاً 10000">
+    <button class="big-btn" style="margin-top:12px" onclick="submitWeeklyPayment('${workerId}')">ادائیگی جمع کریں</button>
+  `);
+}
+async function submitWeeklyPayment(workerId){
+  const amount = parseFloat(document.getElementById('wkPayAmount').value);
+  if(!amount || amount<=0){ showToast('درست رقم لکھیں'); return; }
+  DB.worker_advances.push({id:uid(), workerId, date: uiState.weekEndDate || todayStr(), amount, note:'جمعرات کا حساب', type:'payment'});
+  await save('worker_advances');
+  showToast('ادائیگی محفوظ ہو گئی');
+  openWeeklyWorkerDetail(workerId);
+}
+
+// ---------- Khata Jat (register-style ledgers) ----------
+function openKhataJat(){
+  uiState.khataTab = uiState.khataTab || 'kachi';
+  renderKhataModal();
+}
+function setKhataTab(t){
+  uiState.khataTab = t;
+  renderKhataModal();
+}
+function renderKhataModal(){
+  const labels = {kachi:'کچی ڈیلی', pakki:'پکی ڈیلی', nikasi:'نکاسی', farokht:'فروخت'};
+  openModal('کھاتہ جات', `
+    <div class="tabbar">
+      ${Object.keys(labels).map(k=>`<button class="${uiState.khataTab===k?'active':''}" onclick="setKhataTab('${k}')">${labels[k]}</button>`).join('')}
+    </div>
+    ${buildRegisterHtml(uiState.khataTab)}
+  `);
+}
+function registerLine(kind, e){
+  if(kind==='kachi'){
+    return `<div class="list-item"><div><div class="li-main">${escapeHtml(e.workerName||'—')}</div><div class="li-sub">${fmtNum(e.qty)} اینٹیں بنائیں</div></div><div class="li-amt good">${fmtMoney(e.amount)}</div></div>`;
+  }
+  if(kind==='pakki'){
+    return `<div class="list-item"><div><div class="li-main">${escapeHtml(e.workerName||'—')}</div><div class="li-sub">${fmtNum(e.qty)} اینٹیں بھٹے میں پہنچیں${e.rainDamage? ' • بارش سے خراب '+fmtNum(e.rainDamage):''}</div></div></div>`;
+  }
+  if(kind==='nikasi'){
+    return `<div class="list-item"><div><div class="li-main">نکاسی</div><div class="li-sub">اول ${fmtNum(e.awal||0)} • دوم ${fmtNum(e.dom||0)} • بارشی ${fmtNum(e.barishi||0)}</div></div><div class="li-amt">${fmtNum((e.awal||0)+(e.dom||0)+(e.barishi||0))}</div></div>`;
+  }
+  if(kind==='farokht'){
+    const due = e.total - e.received;
+    const name = e.buyerName || e.buyer || 'گاہک';
+    return `<div class="list-item"><div><div class="li-main">${escapeHtml(name)}</div><div class="li-sub">${fmtNum(e.qty)} اینٹیں${e.quality? ' ('+qualityLabel(e.quality)+')':''} • ${due>0? 'باقی '+fmtMoney(due) : 'مکمل وصول'}</div></div><div class="li-amt good">${fmtMoney(e.total)}</div></div>`;
+  }
+  return '';
+}
+function buildRegisterHtml(kind){
+  const entriesMap = {kachi:DB.kachi_entries, pakki:DB.pakki_entries, nikasi:DB.nikasi_entries, farokht:DB.farokht_entries};
+  const iconMap = {kachi:'🧱', pakki:'🔥', nikasi:'📤', farokht:'💰'};
+  const entries = entriesMap[kind] || [];
+  if(entries.length===0) return emptyState(iconMap[kind], 'ابھی کوئی ریکارڈ نہیں');
+  const byDate = {};
+  entries.forEach(e=>{ (byDate[e.date] = byDate[e.date] || []).push(e); });
+  const dates = Object.keys(byDate).sort((a,b)=> b.localeCompare(a));
+  return dates.map(d=>`
+    <div class="section-title" style="font-size:15px; margin:14px 2px 6px;">${fmtDate(d)}</div>
+    <div class="card" style="padding:4px 12px;">
+      ${byDate[d].map(e=>registerLine(kind,e)).join('')}
+    </div>
+  `).join('');
+}
+
+// ---------- Generic helpers ----------
+let pendingConfirmAction = null;
+function askConfirm(message, actionFn){
+  pendingConfirmAction = actionFn;
+  openModal('تصدیق کریں', `
+    <div class="note-box" style="font-size:15px;">${escapeHtml(message)}</div>
+    <div class="row-flex" style="margin-top:16px;">
+      <button class="big-btn secondary" onclick="pendingConfirmAction=null; closeModal();">منسوخ</button>
+      <button class="big-btn" style="background:var(--bad);" onclick="runPendingConfirm()">تصدیق کریں</button>
+    </div>
+  `);
+}
+async function runPendingConfirm(){
+  const fn = pendingConfirmAction;
+  pendingConfirmAction = null;
+  if(fn) await fn();
+}
+async function deleteEntry(key, id){
+  askConfirm('کیا آپ واقعی یہ اندراج حذف کرنا چاہتے ہیں؟', async ()=>{
+    DB[key] = DB[key].filter(e=>e.id!==id);
+    await save(key);
+    showToast('حذف ہو گیا');
+    closeModal();
+    renderTab();
+  });
+}
+function emptyState(icon, text){
+  return `<div class="empty"><span class="ic">${icon}</span>${text}</div>`;
+}
+function escapeHtml(s){
+  if(!s) return '';
+  return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ---------- Modal ----------
+function openModal(title, bodyHtml){
+  let ov = document.getElementById('modalOverlay');
+  if(ov) ov.remove();
+  ov = document.createElement('div');
+  ov.className = 'modal-overlay';
+  ov.id = 'modalOverlay';
+  ov.onclick = (e)=>{ if(e.target===ov) closeModal(); };
+  ov.innerHTML = `
+    <div class="modal-sheet" style="position:relative;">
+      <button class="close-x" style="background:rgba(43,36,28,0.1); color:var(--ink);" onclick="closeModal()">✕</button>
+      <h3>${title}</h3>
+      ${bodyHtml}
+    </div>
+  `;
+  document.body.appendChild(ov);
+}
+function closeModal(){
+  const ov = document.getElementById('modalOverlay');
+  if(ov) ov.remove();
+}
+
+// ---------- Settings ----------
+function openSettings(){
+  openModal('ترتیبات', `
+    <label class="field-label">بھٹے کا نام</label>
+    <input type="text" id="setKilnName" value="${escapeHtml(DB.settings.kiln_name||'')}">
+    <label class="field-label">مزدوروں کا ریٹ فی ہزار اینٹ</label>
+    <input type="number" id="setRate" value="${DB.settings.rate_per_1000}" inputmode="numeric">
+    <button class="big-btn" style="margin-top:16px" onclick="submitSettings()">محفوظ کریں</button>
+    <div class="divider"></div>
+    <div class="note-box">آپ کا تمام ڈیٹا اس ایپ کے ساتھ منسلک آپ کے اکاؤنٹ میں محفوظ رہتا ہے۔ موبائل بدلنے پر بھی اسی اکاؤنٹ سے لاگ ان کر کے ڈیٹا واپس مل جائے گا۔</div>
+  `);
+}
+async function submitSettings(){
+  const name = document.getElementById('setKilnName').value.trim();
+  const rate = parseFloat(document.getElementById('setRate').value);
+  if(!rate || rate<=0){ showToast('درست ریٹ لکھیں'); return; }
+  DB.settings.kiln_name = name || 'میرا بھٹہ';
+  DB.settings.rate_per_1000 = rate;
+  await save('settings');
+  closeModal();
+  showToast('ترتیبات محفوظ ہو گئیں');
+  render();
+}
+
+// ---------- Init ----------
+loadAll();
+</script>
+</body>
+</html>
