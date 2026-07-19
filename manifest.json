@@ -1,0 +1,27 @@
+{
+  "name": "بھٹہ کھاتہ",
+  "short_name": "بھٹہ کھاتہ",
+  "description": "بھٹہ کاروبار کا مکمل حساب کتاب",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F3E9D8",
+  "theme_color": "#A6472A",
+  "orientation": "portrait",
+  "dir": "rtl",
+  "lang": "ur",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
