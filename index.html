@@ -6,6 +6,7 @@
 <title>بھٹہ کھاتہ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&family=Noto+Sans+Arabic:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   :root{
     --clay: #A6472A;
@@ -307,6 +308,32 @@
   .note-box{
     background: var(--sand-deep); border-radius:10px; padding:10px 12px; font-size:13px; color:var(--ink-soft); margin-top:10px;
   }
+  .login-screen{
+    position:fixed; inset:0; background: linear-gradient(180deg, var(--clay-dark) 0%, var(--clay) 55%, var(--sand) 55%);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding: 30px; text-align:center; z-index: 500;
+  }
+  .login-screen h1{
+    font-family:'Noto Nastaliq Urdu', serif; color:#fff; font-size:36px; margin:0 0 8px;
+  }
+  .login-screen .tag{ color:rgba(255,255,255,0.85); font-size:14px; margin-bottom:40px; }
+  .login-card{
+    background: var(--card); border-radius: 20px; padding: 28px 22px; width:100%; max-width:360px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  }
+  .login-card .icon{ font-size:44px; margin-bottom:10px; }
+  .login-card h2{ font-family:'Noto Nastaliq Urdu', serif; font-size:20px; color:var(--clay-dark); margin:0 0 8px; }
+  .login-card p{ font-size:14px; color:var(--ink-soft); margin:0 0 22px; line-height:1.8; }
+  .google-btn{
+    width:100%; padding:14px; border-radius:12px; border:2px solid var(--line); background:#fff;
+    display:flex; align-items:center; justify-content:center; gap:10px; font-weight:700; font-size:16px;
+    color: var(--ink); cursor:pointer; font-family:'Noto Sans Arabic',sans-serif;
+  }
+  .google-btn:active{ background: var(--sand-deep); }
+  .login-status{ margin-top:16px; font-size:13px; color: var(--ink-soft); min-height:18px; }
+  .userbar{
+    display:flex; align-items:center; gap:8px; font-size:12px; color:rgba(255,255,255,0.85); margin-top:4px;
+  }
 </style>
 </head>
 <body>
@@ -358,21 +385,165 @@ function fmtNum(n){
 async function loadAll(){
   for(const key of Object.values(STORAGE_KEYS)){
     try{
-      const res = await window.storage.get(key, false);
-      if(res && res.value !== undefined){
-        DB[key] = JSON.parse(res.value);
+      const raw = localStorage.getItem('bhattaKhata_'+key);
+      if(raw !== null){
+        DB[key] = JSON.parse(raw);
       }
     }catch(e){ /* key not found yet, keep default */ }
   }
-  render();
 }
 async function save(key){
   try{
-    await window.storage.set(key, JSON.stringify(DB[key]), false);
+    localStorage.setItem('bhattaKhata_'+key, JSON.stringify(DB[key]));
   }catch(e){
     console.error('save failed', key, e);
     showToast('محفوظ کرنے میں مسئلہ ہوا، دوبارہ کوشش کریں');
   }
+  scheduleDriveBackup();
+}
+
+// ---------- Google Sign-In + Drive Backup ----------
+const GOOGLE_CLIENT_ID = '38012722711-9e8tp0o1mfh4c5sbpsndec17s91q9g9n.apps.googleusercontent.com';
+const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.email';
+const BACKUP_FILENAME = 'bhatta-khata-backup.json';
+let gAccessToken = null;
+let gDriveFileId = null;
+let gUserEmail = null;
+let gTokenClient = null;
+let backupTimer = null;
+
+function initGoogleClient(){
+  if(typeof google === 'undefined' || !google.accounts){
+    setTimeout(initGoogleClient, 300);
+    return;
+  }
+  gTokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+    scope: DRIVE_SCOPE,
+    callback: async (resp) => {
+      if(resp.error){
+        setLoginStatus('لاگ ان منسوخ ہو گیا، دوبارہ کوشش کریں۔');
+        return;
+      }
+      gAccessToken = resp.access_token;
+      await afterSignIn();
+    }
+  });
+  const btn = document.getElementById('googleSignInBtn');
+  if(btn) btn.disabled = false;
+}
+function setLoginStatus(msg){
+  const el = document.getElementById('loginStatus');
+  if(el) el.textContent = msg;
+}
+function signInWithGoogle(){
+  if(!gTokenClient){ setLoginStatus('گوگل تیار ہو رہا ہے، ذرا انتظار کریں...'); return; }
+  setLoginStatus('گوگل اکاؤنٹ منتخب کریں...');
+  gTokenClient.requestAccessToken({prompt:'consent'});
+}
+async function afterSignIn(){
+  setLoginStatus('آپ کا ڈیٹا لایا جا رہا ہے...');
+  try{
+    const infoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: {Authorization: 'Bearer '+gAccessToken}
+    });
+    const info = await infoRes.json();
+    gUserEmail = info.email || '';
+  }catch(e){ /* not critical */ }
+
+  await loadAll(); // load whatever is on this device first
+
+  try{
+    const found = await findExistingDriveBackup();
+    if(found){
+      const cloudData = await downloadDriveBackup();
+      if(cloudData && typeof cloudData==='object'){
+        Object.keys(STORAGE_KEYS).forEach(()=>{});
+        for(const key of Object.values(STORAGE_KEYS)){
+          if(cloudData[key] !== undefined){
+            DB[key] = cloudData[key];
+            localStorage.setItem('bhattaKhata_'+key, JSON.stringify(DB[key]));
+          }
+        }
+      }
+    } else {
+      // first time backing up this device's data (if any) to Drive
+      await uploadBackupToDrive();
+    }
+  }catch(e){
+    console.error('drive sync error', e);
+    showToast('گوگل ڈرائیو سے رابطے میں مسئلہ ہوا، فون میں موجود ڈیٹا دکھایا جا رہا ہے');
+  }
+
+  hideLoginScreen();
+  render();
+}
+async function findExistingDriveBackup(){
+  const q = encodeURIComponent(`name='${BACKUP_FILENAME}'`);
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=${q}&fields=files(id,name)`, {
+    headers: {Authorization: 'Bearer '+gAccessToken}
+  });
+  if(!res.ok) throw new Error('drive list failed');
+  const data = await res.json();
+  if(data.files && data.files.length>0){
+    gDriveFileId = data.files[0].id;
+    return true;
+  }
+  return false;
+}
+async function downloadDriveBackup(){
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${gDriveFileId}?alt=media`, {
+    headers: {Authorization: 'Bearer '+gAccessToken}
+  });
+  if(!res.ok) throw new Error('drive download failed');
+  return await res.json();
+}
+function scheduleDriveBackup(){
+  if(!gAccessToken) return;
+  clearTimeout(backupTimer);
+  backupTimer = setTimeout(uploadBackupToDrive, 1500);
+}
+async function uploadBackupToDrive(){
+  if(!gAccessToken) return;
+  const content = JSON.stringify(DB);
+  try{
+    if(gDriveFileId){
+      await fetch(`https://www.googleapis.com/upload/drive/v3/files/${gDriveFileId}?uploadType=media`, {
+        method: 'PATCH',
+        headers: {Authorization: 'Bearer '+gAccessToken, 'Content-Type':'application/json'},
+        body: content
+      });
+    } else {
+      const boundary = 'bhattaKhataBoundary';
+      const metadata = {name: BACKUP_FILENAME, parents: ['appDataFolder'], mimeType:'application/json'};
+      const body =
+        `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n`+
+        `--${boundary}\r\nContent-Type: application/json\r\n\r\n${content}\r\n`+
+        `--${boundary}--`;
+      const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+        method: 'POST',
+        headers: {Authorization: 'Bearer '+gAccessToken, 'Content-Type': `multipart/related; boundary=${boundary}`},
+        body
+      });
+      const data = await res.json();
+      if(data.id) gDriveFileId = data.id;
+    }
+  }catch(e){
+    console.error('drive backup failed', e);
+  }
+}
+function hideLoginScreen(){
+  const el = document.getElementById('loginScreen');
+  if(el) el.remove();
+}
+function signOutGoogle(){
+  if(gAccessToken){
+    try{ google.accounts.oauth2.revoke(gAccessToken, ()=>{}); }catch(e){}
+  }
+  gAccessToken = null;
+  gDriveFileId = null;
+  gUserEmail = null;
+  location.reload();
 }
 
 let toastTimer=null;
@@ -1330,7 +1501,8 @@ function openSettings(){
     <input type="number" id="setRate" value="${DB.settings.rate_per_1000}" inputmode="numeric">
     <button class="big-btn" style="margin-top:16px" onclick="submitSettings()">محفوظ کریں</button>
     <div class="divider"></div>
-    <div class="note-box">آپ کا تمام ڈیٹا اس ایپ کے ساتھ منسلک آپ کے اکاؤنٹ میں محفوظ رہتا ہے۔ موبائل بدلنے پر بھی اسی اکاؤنٹ سے لاگ ان کر کے ڈیٹا واپس مل جائے گا۔</div>
+    <div class="note-box">${gUserEmail? 'اکاؤنٹ: '+escapeHtml(gUserEmail) : ''} آپ کا ڈیٹا اس فون میں اور گوگل ڈرائیو میں محفوظ ہے۔ نیا فون لینے پر اسی جی میل سے لاگ ان کر کے ڈیٹا واپس مل جائے گا۔</div>
+    <button class="big-btn secondary" style="margin-top:14px;" onclick="signOutGoogle()">لاگ آؤٹ کریں</button>
   `);
 }
 async function submitSettings(){
@@ -1346,7 +1518,27 @@ async function submitSettings(){
 }
 
 // ---------- Init ----------
-loadAll();
+function showLoginScreen(){
+  const overlay = document.createElement('div');
+  overlay.id = 'loginScreen';
+  overlay.className = 'login-screen';
+  overlay.innerHTML = `
+    <h1>بھٹہ کھاتہ</h1>
+    <div class="tag">آپ کے بھٹے کا مکمل حساب کتاب</div>
+    <div class="login-card">
+      <div class="icon">🧱</div>
+      <h2>جاری رکھنے کے لیے لاگ ان کریں</h2>
+      <p>آپ کا ڈیٹا آپ کے فون میں محفوظ رہے گا اور گوگل ڈرائیو پر بھی خودکار بیک اپ ہوتا رہے گا، تاکہ فون بدلنے یا گم ہونے پر بھی ڈیٹا محفوظ رہے۔</p>
+      <button class="google-btn" id="googleSignInBtn" onclick="signInWithGoogle()" disabled>
+        <span style="font-size:20px;">🔵</span> Continue with Google
+      </button>
+      <div class="login-status" id="loginStatus">گوگل تیار ہو رہا ہے...</div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  initGoogleClient();
+}
+showLoginScreen();
 </script>
 </body>
 </html>
