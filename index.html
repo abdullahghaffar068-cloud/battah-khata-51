@@ -446,6 +446,8 @@ let gTokenClient = null;
 let backupTimer = null;
 
 let gSessionActive = false;
+let silentLoginTimeout = null;
+let gManualRetryPending = false;
 function initGoogleClient(){
   if(typeof google === 'undefined' || !google.accounts){
     setTimeout(initGoogleClient, 300);
@@ -455,16 +457,24 @@ function initGoogleClient(){
     client_id: GOOGLE_CLIENT_ID,
     scope: DRIVE_SCOPE,
     callback: async (resp) => {
+      clearTimeout(silentLoginTimeout);
       if(resp.error){
         if(gSessionActive){
           // background silent refresh failed quietly; try again later, don't disrupt the user
           scheduleTokenRefresh();
           return;
         }
-        setLoginStatus('خودکار لاگ ان ممکن نہیں ہوا، براہ کرم دوبارہ لاگ ان کریں۔');
+        if(gManualRetryPending){
+          // the quick attempt failed after a manual tap; escalate once to the full consent screen
+          gManualRetryPending = false;
+          signInWithGoogleFullConsent();
+          return;
+        }
+        setLoginStatus('بٹن دبا کر لاگ ان کریں');
         setLoginButtonVisible(true);
         return;
       }
+      gManualRetryPending = false;
       gAccessToken = resp.access_token;
       if(gSessionActive){
         scheduleTokenRefresh();
@@ -483,6 +493,14 @@ function initGoogleClient(){
     setLoginStatus('خودکار لاگ ان ہو رہا ہے...');
     setLoginButtonVisible(false);
     gTokenClient.requestAccessToken({prompt:'', hint: savedEmail});
+    // Safety net: if silent login doesn't finish quickly, don't leave the person stuck waiting — show the button
+    clearTimeout(silentLoginTimeout);
+    silentLoginTimeout = setTimeout(()=>{
+      if(!gSessionActive){
+        setLoginStatus('بٹن دبا کر لاگ ان کریں');
+        setLoginButtonVisible(true);
+      }
+    }, 2500);
   }
 }
 function setLoginButtonVisible(visible){
@@ -495,6 +513,12 @@ function setLoginStatus(msg){
 }
 function signInWithGoogle(){
   if(!gTokenClient){ setLoginStatus('گوگل تیار ہو رہا ہے، ذرا انتظار کریں...'); return; }
+  setLoginStatus('لاگ ان ہو رہا ہے...');
+  gManualRetryPending = true;
+  gTokenClient.requestAccessToken({prompt:''});
+}
+function signInWithGoogleFullConsent(){
+  if(!gTokenClient){ return; }
   setLoginStatus('گوگل اکاؤنٹ منتخب کریں...');
   gTokenClient.requestAccessToken({prompt:'consent'});
 }
