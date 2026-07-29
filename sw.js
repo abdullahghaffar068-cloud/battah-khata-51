@@ -1,5 +1,5 @@
-const CACHE_NAME = 'bhatta-khata-v1';
-const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
+const CACHE_NAME = 'bhatta-khata-v2';
+const ASSETS = ['./manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -20,6 +20,13 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   // Never intercept Google API / auth calls - always go to network
   if (event.request.url.includes('google') || event.request.url.includes('accounts.google.com')) {
+    return;
+  }
+  // Network-first for the app HTML itself, so updates always show immediately
+  if (event.request.mode === 'navigate' || event.request.url.endsWith('.html') || event.request.url.endsWith('/')) {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
     return;
   }
   event.respondWith(
