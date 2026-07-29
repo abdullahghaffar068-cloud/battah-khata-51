@@ -1866,13 +1866,21 @@ function openBookingForm(){
     <label class="field-label">کوالٹی</label>
     <div id="bkQualityChips">${bkQualityChipsHtml()}</div>
     <label class="field-label">کل سودا (اینٹوں کی تعداد)</label>
-    <input type="number" id="bkTotalQty" inputmode="numeric" placeholder="مثلاً 50000">
-    <label class="field-label">کل رقم (پورے سودے کی)</label>
-    <input type="number" id="bkTotalPrice" inputmode="numeric" placeholder="مثلاً 600000">
+    <input type="number" id="bkTotalQty" inputmode="numeric" placeholder="مثلاً 50000" oninput="updateBookingPreview()">
+    <label class="field-label">فی ہزار قیمت</label>
+    <input type="number" id="bkRate" inputmode="numeric" placeholder="مثلاً 12000" oninput="updateBookingPreview()">
+    <div class="note-box" id="bkPreview">کل رقم: 0 روپے</div>
     <label class="field-label">ابھی کتنی ایڈوانس رقم ملی؟</label>
     <input type="number" id="bkAdvance" inputmode="numeric" placeholder="0">
     <button class="big-btn" style="margin-top:16px" onclick="submitBooking()">محفوظ کریں</button>
   `);
+}
+function updateBookingPreview(){
+  const qty = parseFloat(document.getElementById('bkTotalQty').value)||0;
+  const rate = parseFloat(document.getElementById('bkRate').value)||0;
+  const total = (qty/1000)*rate;
+  const el = document.getElementById('bkPreview');
+  if(el) el.textContent = `کل رقم: ${fmtMoney(total)}`;
 }
 function bkBuyerChipsHtml(){
   let html = DB.buyers.map(b=>`
@@ -1907,15 +1915,16 @@ function bkQualityChipsHtml(){
 function selectBkQuality(q){ uiState.bkQuality = q; document.getElementById('bkQualityChips').innerHTML = bkQualityChipsHtml(); }
 async function submitBooking(){
   const totalQty = parseFloat(document.getElementById('bkTotalQty').value);
-  const totalPrice = parseFloat(document.getElementById('bkTotalPrice').value);
+  const rate = parseFloat(document.getElementById('bkRate').value);
   const advanceReceived = parseFloat(document.getElementById('bkAdvance').value)||0;
   if(!uiState.bkBuyerId){ showToast('خریدار منتخب کریں'); return; }
-  if(!totalQty || totalQty<=0 || !totalPrice || totalPrice<=0){ showToast('درست تعداد اور رقم لکھیں'); return; }
+  if(!totalQty || totalQty<=0 || !rate || rate<=0){ showToast('درست تعداد اور فی ہزار قیمت لکھیں'); return; }
+  const totalPrice = (totalQty/1000)*rate;
   const buyer = DB.buyers.find(b=>b.id===uiState.bkBuyerId);
   DB.sale_bookings.push({
     id:uid(), createdAt:Date.now(), date:todayStr(),
     buyerId:buyer.id, buyerName:buyer.name, quality:uiState.bkQuality,
-    totalQty, totalPrice, advanceReceived, deliveries:[], payments:[]
+    totalQty, rate, totalPrice, advanceReceived, deliveries:[], payments:[]
   });
   await save('sale_bookings');
   closeModal();
@@ -1933,7 +1942,7 @@ function openBookingDetail(id){
   const payments = [...(b.payments||[])].sort((a,c)=>c.date.localeCompare(a.date));
   openModal(b.buyerName, `
     <div class="note-box" style="font-size:15px;">
-      کل سودا: <b>${fmtNum(b.totalQty)}</b> (${qualityLabel(b.quality)}) • کل رقم: <b>${fmtMoney(b.totalPrice)}</b><br>
+      کل سودا: <b>${fmtNum(b.totalQty)}</b> (${qualityLabel(b.quality)}) • فی ہزار: <b>${fmtMoney(b.rate||0)}</b> • کل رقم: <b>${fmtMoney(b.totalPrice)}</b><br>
       اب تک بھیجی گئیں: <b>${fmtNum(delivered)}</b> • باقی اینٹیں: <b style="color:var(--bad)">${fmtNum(remainingQty)}</b><br>
       وصول شدہ: <b style="color:var(--good)">${fmtMoney(received)}</b> • باقی رقم: <b style="color:var(--bad)">${fmtMoney(remainingAmount)}</b>
     </div>
