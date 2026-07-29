@@ -445,6 +445,7 @@ let gUserEmail = null;
 let gTokenClient = null;
 let backupTimer = null;
 
+let gSessionActive = false;
 function initGoogleClient(){
   if(typeof google === 'undefined' || !google.accounts){
     setTimeout(initGoogleClient, 300);
@@ -455,15 +456,38 @@ function initGoogleClient(){
     scope: DRIVE_SCOPE,
     callback: async (resp) => {
       if(resp.error){
-        setLoginStatus('لاگ ان منسوخ ہو گیا، دوبارہ کوشش کریں۔');
+        if(gSessionActive){
+          // background silent refresh failed quietly; try again later, don't disrupt the user
+          scheduleTokenRefresh();
+          return;
+        }
+        setLoginStatus('خودکار لاگ ان ممکن نہیں ہوا، براہ کرم دوبارہ لاگ ان کریں۔');
+        setLoginButtonVisible(true);
         return;
       }
       gAccessToken = resp.access_token;
+      if(gSessionActive){
+        scheduleTokenRefresh();
+        return;
+      }
+      gSessionActive = true;
       await afterSignIn();
     }
   });
   const btn = document.getElementById('googleSignInBtn');
   if(btn) btn.disabled = false;
+
+  // If this device signed in before, try a silent (invisible) re-login first
+  const savedEmail = localStorage.getItem('bhattaKhata_savedEmail');
+  if(savedEmail){
+    setLoginStatus('خودکار لاگ ان ہو رہا ہے...');
+    setLoginButtonVisible(false);
+    gTokenClient.requestAccessToken({prompt:'', hint: savedEmail});
+  }
+}
+function setLoginButtonVisible(visible){
+  const btn = document.getElementById('googleSignInBtn');
+  if(btn) btn.style.display = visible ? 'flex' : 'none';
 }
 function setLoginStatus(msg){
   const el = document.getElementById('loginStatus');
@@ -482,8 +506,10 @@ async function afterSignIn(){
     });
     const info = await infoRes.json();
     gUserEmail = info.email || '';
+    if(gUserEmail) localStorage.setItem('bhattaKhata_savedEmail', gUserEmail);
   }catch(e){ /* not critical */ }
 
+  scheduleTokenRefresh();
   await loadAll(); // load whatever is on this device first
 
   try{
@@ -576,7 +602,18 @@ function signOutGoogle(){
   gAccessToken = null;
   gDriveFileId = null;
   gUserEmail = null;
+  localStorage.removeItem('bhattaKhata_savedEmail');
   location.reload();
+}
+let tokenRefreshTimer = null;
+function scheduleTokenRefresh(){
+  clearTimeout(tokenRefreshTimer);
+  // Access tokens last ~1 hour; silently renew a bit before expiry so the session never visibly logs out
+  tokenRefreshTimer = setTimeout(()=>{
+    if(gTokenClient && gUserEmail){
+      gTokenClient.requestAccessToken({prompt:'', hint: gUserEmail});
+    }
+  }, 50*60*1000);
 }
 
 let toastTimer=null;
@@ -692,7 +729,6 @@ function renderMore(){
     {tab:'kharch', ic:'🧾', title:'بٹہ خرچ', sub:'بجلی، مہمان، ڈیزل، مینٹیننس وغیرہ'},
     {tab:'bharai', ic:'🧱', title:'بھرائی کھاتہ', sub:'بھرائی مزدوروں کی اجرت'},
     {tab:'salaried', ic:'🧑‍💼', title:'ماہانہ تنخواہ ملازمین', sub:'تنخواہ دار عملہ'},
-    {tab:'bookings', ic:'📦', title:'پیشگی فروخت (بکنگ)', sub:'ایڈوانس آرڈر اور بتدریج ترسیل'},
   ];
   return `
     ${items.map(it=>`
@@ -995,6 +1031,7 @@ function renderFarokht(){
       <button class="big-btn" onclick="openFarokhtForm()">➕ نئی فروخت</button>
       <button class="big-btn secondary" onclick="openBuyersList()">🧾 خریداروں کا کھاتہ</button>
     </div>
+    <button class="big-btn secondary" style="margin-top:10px;" onclick="switchTab('bookings')">📦 پیشگی فروخت (بکنگ) — ایڈوانس آرڈر اور بتدریج ترسیل</button>
     <div class="section-title">فروخت کی تفصیل</div>
     <div class="card" style="padding:6px 12px;">
       ${entries.length===0 ? emptyState('💰','ابھی کوئی فروخت نہیں') :
@@ -1133,10 +1170,28 @@ function openBuyerDetail(id){
   if(!b) return;
   const entries = DB.farokht_entries.filter(e=>e.buyerId===id).sort((a,b2)=> b2.date.localeCompare(a.date));
   const bal = buyerBalance(id);
+  const bookings = DB.sale_bookings.filter(bk=>bk.buyerId===id).sort((a,c)=>(c.createdAt||0)-(a.createdAt||0));
   openModal(b.name, `
     <div class="note-box" style="font-size:15px;">
       کل خریداری: <b>${fmtMoney(bal.total)}</b> • وصول شدہ: <b style="color:var(--good)">${fmtMoney(bal.received)}</b> • باقی: <b style="color:var(--bad)">${fmtMoney(bal.due)}</b>
     </div>
+    ${bookings.length>0 ? `
+    <div class="divider"></div>
+    <div class="section-title" style="font-size:16px;">پیشگی فروخت (بکنگ)</div>
+    ${bookings.map(bk=>{
+      const delivered = bookingDeliveredQty(bk);
+      const remainingQty = bk.totalQty - delivered;
+      const remainingAmount = bk.totalPrice - bookingReceivedAmount(bk);
+      return `
+      <div class="list-item" onclick="openBookingDetail('${bk.id}')" style="cursor:pointer;">
+        <div>
+          <div class="li-main">کل سودا ${fmtNum(bk.totalQty)} (${qualityLabel(bk.quality)})</div>
+          <div class="li-sub">بھیجی جا چکیں ${fmtNum(delivered)} • باقی بھیجنی ہیں <b style="color:var(--bad)">${fmtNum(remainingQty)}</b></div>
+        </div>
+        <div class="li-amt bad">${fmtMoney(remainingAmount)}</div>
+      </div>`;
+    }).join('')}
+    ` : ''}
     <div class="divider"></div>
     <div class="section-title" style="font-size:16px;">خریداری کی تاریخ</div>
     ${entries.length===0 ? emptyState('📋','ابھی کوئی خریداری نہیں') :
@@ -1775,7 +1830,7 @@ function totalBookingDeliveredQtyByQuality(q){
 function renderBookings(){
   const bookings = [...DB.sale_bookings].sort((a,b)=> (b.createdAt||0)-(a.createdAt||0));
   return `
-    <button class="big-btn secondary" style="margin-bottom:12px;" onclick="backToMore()">◀ مزید کی طرف واپس</button>
+    <button class="big-btn secondary" style="margin-bottom:12px;" onclick="switchTab('farokht')">◀ فروخت کی طرف واپس</button>
     <button class="big-btn" onclick="openBookingForm()">➕ نئی پیشگی فروخت (بکنگ)</button>
     <div class="section-title">بکنگز</div>
     ${bookings.length===0 ? `<div class="card">${emptyState('📦','ابھی کوئی بکنگ نہیں')}</div>` :
